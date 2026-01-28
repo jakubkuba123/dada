@@ -15,29 +15,31 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
 
   useEffect(() => {
     const fetchTips = async () => {
-      setIsLoadingTips(true);
-      const newTips = await getChickenTips();
-      setTips(newTips);
-      setIsLoadingTips(false);
+      try {
+        setIsLoadingTips(true);
+        const newTips = await getChickenTips();
+        setTips(newTips);
+      } catch (err) {
+        console.error("Dashboard tips error:", err);
+      } finally {
+        setIsLoadingTips(false);
+      }
     };
     fetchTips();
   }, []);
 
-  const totalChickens = state.chickens.length;
-  const totalEggsToday = state.eggRecords.length > 0 
-    ? state.eggRecords[state.eggRecords.length - 1].normalCount + 
-      state.eggRecords[state.eggRecords.length - 1].extraLargeCount +
-      state.eggRecords[state.eggRecords.length - 1].extraSmallCount
-    : 0;
-
-  const sickChickens = state.chickens.filter(c => c.status === 'sick').length;
-  const totalRevenue = state.sales.reduce((acc, s) => acc + s.priceCzk, 0);
+  const totalChickens = state?.chickens?.length || 0;
+  const sickChickens = state?.chickens?.filter(c => c.status === 'sick').length || 0;
+  const totalRevenue = state?.sales?.reduce((acc, s) => acc + (s.priceCzk || 0), 0) || 0;
 
   // Chart data for last 7 days production
-  const productionData = state.eggRecords.slice(-7).map(r => ({
+  const productionData = (state?.eggRecords || []).slice(-7).map(r => ({
     date: new Date(r.date).toLocaleDateString('cs-CZ', { weekday: 'short' }),
-    total: r.normalCount + r.extraLargeCount + r.extraSmallCount
+    total: (r.normalCount || 0) + (r.extraLargeCount || 0) + (r.extraSmallCount || 0)
   }));
+
+  const currentEggStock = state?.eggStock ? 
+    ((state.eggStock.normal || 0) + (state.eggStock.extraLarge || 0) + (state.eggStock.extraSmall || 0)) : 0;
 
   return (
     <div className="space-y-6">
@@ -62,7 +64,7 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
           <div>
             <p className="text-sm text-stone-500 font-medium">Skladem vajec</p>
             <p className="text-2xl font-bold text-stone-800">
-              {state.eggStock.normal + state.eggStock.extraLarge + state.eggStock.extraSmall}
+              {currentEggStock}
             </p>
           </div>
         </div>
@@ -120,12 +122,12 @@ const Dashboard: React.FC<DashboardProps> = ({ state }) => {
                   <div className="h-4 bg-amber-800 rounded w-4/6"></div>
                 </div>
               ) : (
-                tips.map((tip, idx) => (
+                tips.length > 0 ? tips.map((tip, idx) => (
                   <div key={idx} className="flex gap-3">
                     <span className="text-amber-400 font-bold">•</span>
                     <p className="text-sm text-amber-50/90 leading-relaxed">{tip}</p>
                   </div>
-                ))
+                )) : <p className="text-sm text-amber-200/50">Tipy se načítají...</p>
               )}
             </div>
           </div>
