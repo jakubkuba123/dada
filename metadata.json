@@ -1,0 +1,7 @@
+{
+  "name": "Slepičárna Pro",
+  "description": "Komplexní pomocník pro správu domácí farmy se slepicemi. Sleduje počet slepic, snášku, finance, zdraví a údržbu kurníku.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
